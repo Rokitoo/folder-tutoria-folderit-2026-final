@@ -17,35 +17,59 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def listar_items(buscar: str | None = None) -> list[dict]:
-    """Devuelve todos los items, opcionalmente filtrados por nombre."""
-    consulta = supabase.table("items").select("*")
-    if buscar:
-        consulta = consulta.ilike("nombre", f"%{buscar}%")
-    respuesta = consulta.order("id").execute()
+def listar_libros(titulo: str | None = None) -> list[dict]:
+    """Devuelve todos los libros, opcionalmente filtrados por titulo."""
+    consulta = supabase.table("libros_tp").select("*")
+    if titulo:
+        consulta = consulta.ilike("titulo", f"%{titulo}%")
+    respuesta = consulta.order("id_libro").execute()
     return respuesta.data
 
 
-def buscar_item(item_id: int) -> dict | None:
+def buscar_libros(libro_id: int) -> dict | None:
     """Devuelve el item con ese id, o None si no existe."""
     respuesta = (
-        supabase.table("items")
+        supabase.table("libros_tp")
         .select("*")
-        .eq("id", item_id)
+        .eq("id", libro_id)
         .limit(1)
         .execute()
     )
     return respuesta.data[0] if respuesta.data else None
 
 
-def agregar_item(datos: dict) -> dict:
-    """Inserta un item y devuelve la fila creada por Supabase."""
+def agregar_libros(datos: dict) -> dict:
+    """Inserta un libro y devuelve la fila creada por Supabase."""
     respuesta = (
-        supabase.table("items")
+        supabase.table("libros_tp")
         .insert(datos)
         .select("*")
         .execute()
     )
     if not respuesta.data:
-        raise RuntimeError("Supabase no devolvió el item insertado.")
+        raise RuntimeError("Supabase no devolvió el libro insertado.")
     return respuesta.data[0]
+
+
+def actualizar_libros(item_id: int, datos: dict) -> dict | None:
+    """Reemplaza los datos enviados del libro y devuelve la fila, o None si no existe."""
+    respuesta = (
+        supabase.table("libros_tp")
+        .update(datos)
+        .eq("id_libro", item_id)
+        .select("*")
+        .execute()
+    )
+    return respuesta.data[0] if respuesta.data else None
+
+
+def borrar_libros(item_id: int) -> dict | None:
+    """Elimina el libro con ese id y devuelve la fila, o None si no existe."""
+    respuesta = (
+        supabase.table("libros_tp")
+        .delete()
+        .eq("id_libro", item_id)
+        .select("*")
+        .execute()
+    )
+    return respuesta.data[0] if respuesta.data else None

@@ -11,7 +11,7 @@ from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.security import APIKeyHeader
 
 import db
-from models import ItemNuevo
+from models import LibroNuevo
 
 load_dotenv()  # lee las variables del archivo .env (solo en la computadora local)
 API_KEY = os.getenv("API_KEY")
@@ -42,19 +42,27 @@ def inicio():
 
 
 # CAMBIAR: la ruta /items y los nombres de las funciones
-@app.get("/items")
-def listar_items(buscar: str | None = None):
-    return db.listar_items(buscar)
+@app.get("/libros")
+def listar_libros(titulo: str | None = None):
+    return db.listar_libros(titulo)
 
 
-@app.get("/items/{item_id}")
-def ver_item(item_id: int):
-    item = db.buscar_item(item_id)
+@app.delete("/libros/{item_id}", dependencies=[Depends(verificar_api_key)])
+def borrar_libro(item_id: int):
+    item = db.borrar_libros(item_id)
     if item is None:
         raise HTTPException(status_code=404, detail="Item no encontrado")
     return item
 
 
-@app.post("/items", status_code=201, dependencies=[Depends(verificar_api_key)])
-def agregar_item(nuevo: ItemNuevo):
-    return db.agregar_item(nuevo.model_dump())
+@app.post("/libros", status_code=201, dependencies=[Depends(verificar_api_key)])
+def agregar_libro(nuevo: LibroNuevo):
+    return db.agregar_libros(nuevo.model_dump())
+
+
+@app.put("/libros/{item_id}", dependencies=[Depends(verificar_api_key)])
+def actualizar_libro(item_id: int, libro: LibroNuevo):
+    item = db.actualizar_libros(item_id, libro.model_dump())
+    if item is None:
+        raise HTTPException(status_code=404, detail="Libro no encontrado")
+    return item
