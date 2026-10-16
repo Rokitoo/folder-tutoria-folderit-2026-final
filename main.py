@@ -40,29 +40,25 @@ def verificar_api_key(clave: str | None = Security(api_key_header)):
 def inicio():
     return {"mensaje": "API funcionando"}
 
-
 # CAMBIAR: la ruta /items y los nombres de las funciones
 @app.get("/libros")
 def listar_libros(titulo: str | None = None):
     return db.listar_libros(titulo)
 
-
-@app.delete("/libros/{item_id}", dependencies=[Depends(verificar_api_key)])
-def borrar_libro(item_id: int):
-    item = db.borrar_libros(item_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Item no encontrado")
-    return item
-
-
 @app.post("/libros", status_code=201, dependencies=[Depends(verificar_api_key)])
 def agregar_libro(nuevo: LibroNuevo):
     return db.agregar_libros(nuevo.model_dump())
-
 
 @app.put("/libros/{item_id}", dependencies=[Depends(verificar_api_key)])
 def actualizar_libro(item_id: int, libro: LibroNuevo):
     item = db.actualizar_libros(item_id, libro.model_dump())
     if item is None:
         raise HTTPException(status_code=404, detail="Libro no encontrado")
+    return item
+
+@app.delete("/libros/{item_id}", dependencies=[Depends(verificar_api_key)])
+def borrar_libro(item_id: int):
+    item = db.borrar_libros(item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Item no encontrado")
     return item
