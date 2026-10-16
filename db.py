@@ -26,12 +26,12 @@ def listar_libros(titulo: str | None = None) -> list[dict]:
     return respuesta.data
 
 
-def buscar_libros(item_id: int) -> dict | None:
+def buscar_libros(libro_id: int) -> dict | None:
     """Devuelve el item con ese id, o None si no existe."""
     respuesta = (
         supabase.table("libros_tp")
         .select("*")
-        .eq("id", item_id)
+        .eq("id", libro_id)
         .limit(1)
         .execute()
     )
