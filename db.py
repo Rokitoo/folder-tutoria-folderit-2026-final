@@ -1,42 +1,51 @@
-"""Base de datos simulada: guarda los datos en un archivo JSON.
+"""Acceso a la tabla items de Supabase."""
+import os
 
-Todo el acceso a los datos está en este archivo. Los endpoints de main.py solo
-llaman a estas funciones, sin saber dónde ni cómo se guardan. Más adelante se
-puede reemplazar este archivo por una base de datos real sin tocar main.py.
-"""
-import json
-from pathlib import Path
+from dotenv import load_dotenv
+from supabase import Client, create_client
 
-# CAMBIAR (opcional): nombre del archivo de datos
-ARCHIVO = Path(__file__).parent / "datos.json"
+load_dotenv()
 
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-def cargar_items():
-    """Lee el archivo y devuelve la lista de elementos."""
-    if not ARCHIVO.exists():
-        return []
-    return json.loads(ARCHIVO.read_text(encoding="utf-8"))
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise RuntimeError(
+        "Faltan SUPABASE_URL o SUPABASE_KEY en el archivo .env."
+    )
 
-
-def guardar_items(items):
-    """Escribe la lista completa de elementos en el archivo."""
-    texto = json.dumps(items, ensure_ascii=False, indent=2)
-    ARCHIVO.write_text(texto, encoding="utf-8")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def buscar_item(item_id):
-    """Devuelve el elemento con ese id, o None si no existe."""
-    for item in cargar_items():
-        if item["id"] == item_id:
-            return item
-    return None
+def listar_items(buscar: str | None = None) -> list[dict]:
+    """Devuelve todos los items, opcionalmente filtrados por nombre."""
+    consulta = supabase.table("items").select("*")
+    if buscar:
+        consulta = consulta.ilike("nombre", f"%{buscar}%")
+    respuesta = consulta.order("id").execute()
+    return respuesta.data
 
 
-def agregar_item(datos):
-    """Agrega un elemento nuevo (diccionario sin id), le asigna un id y lo devuelve."""
-    items = cargar_items()
-    nuevo_id = max((i["id"] for i in items), default=0) + 1
-    item = {"id": nuevo_id, **datos}
-    items.append(item)
-    guardar_items(items)
-    return item
+def buscar_item(item_id: int) -> dict | None:
+    """Devuelve el item con ese id, o None si no existe."""
+    respuesta = (
+        supabase.table("items")
+        .select("*")
+        .eq("id", item_id)
+        .limit(1)
+        .execute()
+    )
+    return respuesta.data[0] if respuesta.data else None
+
+
+def agregar_item(datos: dict) -> dict:
+    """Inserta un item y devuelve la fila creada por Supabase."""
+    respuesta = (
+        supabase.table("items")
+        .insert(datos)
+        .select("*")
+        .execute()
+    )
+    if not respuesta.data:
+        raise RuntimeError("Supabase no devolvió el item insertado.")
+    return respuesta.data[0]
