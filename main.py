@@ -1,7 +1,7 @@
-"""API base con FastAPI: listar, ver uno y agregar elementos de un objeto X.
+"""API con FastAPI: listar, ver uno y agregar elementos de un objeto X.
 
 Para adaptarla al proyecto propio, buscar los comentarios que empiezan con
-"CAMBIAR" (en main.py, models.py y db.py) y reemplazar "item" por el objeto elegido.
+"CAMBIAR" (en main.py y models.py) y reemplazar "item" por el objeto elegido.
 """
 import os
 import secrets
@@ -44,10 +44,7 @@ def inicio():
 # CAMBIAR: la ruta /items y los nombres de las funciones
 @app.get("/items")
 def listar_items(buscar: str | None = None):
-    items = db.cargar_items()
-    if buscar:
-        items = [i for i in items if buscar.lower() in i["nombre"].lower()]
-    return items
+    return db.listar_items(buscar)
 
 
 @app.get("/items/{item_id}")
