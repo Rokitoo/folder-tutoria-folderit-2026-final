@@ -16,7 +16,6 @@ if not SUPABASE_URL or not SUPABASE_KEY:
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
 def listar_libros(titulo: str | None = None) -> list[dict]:
     """Devuelve todos los libros, opcionalmente filtrados por titulo."""
     consulta = supabase.table("libros_tp").select("*")
@@ -31,7 +30,7 @@ def buscar_libros(libro_id: int) -> dict | None:
     respuesta = (
         supabase.table("libros_tp")
         .select("*")
-        .eq("id", libro_id)
+        .eq("id_libro", libro_id)
         .limit(1)
         .execute()
     )
